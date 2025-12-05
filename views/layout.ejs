@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Lunch Order System</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts - Inter with Vietnamese support -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==================== CLEAN FLAT DESIGN SYSTEM ==================== */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: linear-gradient(to bottom, #f8f9fc 0%, #eef1f7 100%);
+    }
+
+    /* ==================== SIMPLE BACKGROUND ==================== */
+    .gradient-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background: linear-gradient(to bottom, #f8f9fc 0%, #eef1f7 100%);
+    }
+
+    /* ==================== CLEAN FLAT COMPONENTS ==================== */
+    .glass {
+      background: white;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .glass-strong {
+      background: white;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Clean Navigation */
+    .glass-nav {
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Clean Cards */
+    .glass-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      border-color: #d1d5db;
+    }
+
+    /* Clean Buttons */
+    .glass-btn {
+      background: white;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .glass-btn:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .glass-btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Primary CTA Button */
+    .glass-btn-primary {
+      background: #10b981;
+      border: 1px solid #059669;
+      color: white;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    .glass-btn-primary:hover {
+      background: #059669;
+      border-color: #047857;
+      box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    /* Clean Input Fields */
+    .glass-input {
+      background: white;
+      border: 1px solid #d1d5db;
+      color: #374151;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .glass-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .glass-input:focus {
+      outline: none;
+      background: white;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* ==================== NAVIGATION ==================== */
+    nav a {
+      position: relative;
+      color: #6b7280;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+
+    nav a:hover {
+      color: #374151;
+      background: #f3f4f6;
+    }
+
+    nav a.active {
+      color: #6366f1;
+      font-weight: 600;
+      background: #eef2ff;
+    }
+
+    nav a.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #6366f1;
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* ==================== TYPOGRAPHY ==================== */
+    h1, h2, h3, h4, h5, h6 {
+      color: #111827;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .text-glass {
+      color: #374151;
+    }
+
+    .text-glass-muted {
+      color: #6b7280;
+    }
+
+    /* ==================== TABLE STYLES ==================== */
+    .glass-table-row {
+      background: white;
+      border-bottom: 1px solid #f3f4f6;
+      transition: all 0.2s ease;
+    }
+
+    .glass-table-row:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .glass-table-row:hover {
+      background: #f3f4f6;
+    }
+
+    /* ==================== BADGE STYLES ==================== */
+    .badge {
+      font-weight: 600;
+      font-size: 0.75rem;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    /* ==================== UTILITY CLASSES ==================== */
+    .smooth-transition {
+      transition: all 0.2s ease;
+    }
+
+    .hover-lift:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Focus visible for accessibility */
+    *:focus-visible {
+      outline: 2px solid #6366f1;
+      outline-offset: 2px;
+    }
+
+    /* ==================== SCROLLBAR ==================== */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f3f4f6;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .glass-card {
+        border-radius: 12px;
+      }
+
+      nav a {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+      }
+    }
+
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated Gradient Background -->
+  <div class="gradient-bg"></div>
+
+  <!-- Navigation -->
+  <nav class="glass-nav sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex space-x-1 sm:space-x-2">
+          <a href="/" class="flex items-center px-3 py-1 text-sm sm:text-base font-bold rounded-lg smooth-transition">
+            <span class="text-2xl mr-2">🍚</span>
+            <span class="hidden sm:inline">Lunch Orders</span>
+          </a>
+          <a href="/orders" class="flex items-center px-3 py-1 text-sm sm:text-base font-semibold rounded-lg smooth-transition hover-lift">
+            Daily Orders
+          </a>
+          <a href="/debts" class="flex items-center px-3 py-1 text-sm sm:text-base font-semibold rounded-lg smooth-transition hover-lift">
+            Debts
+          </a>
+          <a href="/stats" class="flex items-center px-3 py-1 text-sm sm:text-base font-semibold rounded-lg smooth-transition hover-lift">
+            Statistics
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%- body %>
+  </main>
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.SUPABASE_CONFIG = {
+      url: '<%= process.env.SUPABASE_URL %>',
+      key: '<%= process.env.SUPABASE_KEY %>'
+    };
+
+    // Active navigation highlighting
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentPath = window.location.pathname;
+      document.querySelectorAll('nav a').forEach(link => {
+        if (link.getAttribute('href') === currentPath ||
+            (currentPath === '/' && link.getAttribute('href') === '/orders')) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

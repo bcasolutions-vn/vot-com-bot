@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(node deploy-commands.js:*)",
+      "Skill(aesthetic)",
+      "Bash(python:*)",
+      "Skill(frontend-design)",
+      "Bash(test:*)",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

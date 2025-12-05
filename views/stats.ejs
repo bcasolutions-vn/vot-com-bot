@@ -1,0 +1,195 @@
+<%- include('layout', { body: `
+<style>
+  /* Clean Payment Rate Badge Styles */
+  .rate-badge-excellent {
+    background: #d1fae5;
+    color: #065f46;
+    font-weight: 600;
+  }
+
+  .rate-badge-good {
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+  }
+
+  .rate-badge-poor {
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 600;
+  }
+
+  /* Clean Sortable Header Styles */
+  .sortable-header {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+    padding: 16px 24px;
+  }
+
+  .sortable-header:hover {
+    background: #f3f4f6;
+  }
+
+  .sortable-header::after {
+    content: '↕';
+    margin-left: 8px;
+    opacity: 0.4;
+    font-size: 12px;
+  }
+
+  .sortable-header.sorted-asc::after {
+    content: '↑';
+    opacity: 1;
+    color: #10b981;
+  }
+
+  .sortable-header.sorted-desc::after {
+    content: '↓';
+    opacity: 1;
+    color: #6366f1;
+  }
+</style>
+
+<div>
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-4xl sm:text-5xl font-bold text-glass mb-2">User Statistics</h1>
+    <p class="text-glass-muted text-base sm:text-lg font-medium">All-time order and payment statistics</p>
+  </div>
+
+  <!-- Stats Table -->
+  <div class="glass-strong rounded-2xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="sortable-header text-left text-xs font-bold text-glass-muted uppercase tracking-wider" onclick="sortTable('user_name')">
+              User
+            </th>
+            <th class="sortable-header text-left text-xs font-bold text-glass-muted uppercase tracking-wider" onclick="sortTable('total_orders')">
+              Total Orders
+            </th>
+            <th class="sortable-header text-left text-xs font-bold text-glass-muted uppercase tracking-wider" onclick="sortTable('total_spent')">
+              Total Spent
+            </th>
+            <th class="sortable-header text-left text-xs font-bold text-glass-muted uppercase tracking-wider" onclick="sortTable('avg_price')">
+              Avg Price
+            </th>
+            <th class="sortable-header text-left text-xs font-bold text-glass-muted uppercase tracking-wider" onclick="sortTable('payment_rate')">
+              Payment Rate
+            </th>
+          </tr>
+        </thead>
+        <tbody id="statsTableBody">
+          <!-- Loaded via JavaScript -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  let statsData = [];
+  let sortColumn = 'total_spent';
+  let sortDirection = 'desc';
+
+  loadStats();
+
+  async function loadStats() {
+    try {
+      const res = await fetch('/api/stats');
+      const data = await res.json();
+      statsData = data.stats;
+      renderTable();
+    } catch (err) {
+      console.error('Error loading stats:', err);
+    }
+  }
+
+  function sortTable(column) {
+    if (sortColumn === column) {
+      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortColumn = column;
+      sortDirection = 'desc';
+    }
+
+    statsData.sort((a, b) => {
+      let valA = a[column];
+      let valB = b[column];
+
+      if (typeof valA === 'string') {
+        valA = valA.toLowerCase();
+        valB = valB.toLowerCase();
+      }
+
+      if (sortDirection === 'asc') {
+        return valA > valB ? 1 : -1;
+      } else {
+        return valA < valB ? 1 : -1;
+      }
+    });
+
+    // Update header indicators
+    document.querySelectorAll('.sortable-header').forEach(header => {
+      header.classList.remove('sorted-asc', 'sorted-desc');
+    });
+
+    const activeHeader = document.querySelector(\`[onclick="sortTable('\${column}')"]\`);
+    if (activeHeader) {
+      activeHeader.classList.add(sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    }
+
+    renderTable();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('statsTableBody');
+    tbody.innerHTML = statsData.map(stat => {
+      // Payment rate color and icon
+      let rateClass = 'rate-badge-excellent';
+      let icon = '⭐';
+      if (stat.payment_rate < 80) {
+        rateClass = 'rate-badge-good';
+        icon = '👍';
+      }
+      if (stat.payment_rate < 60) {
+        rateClass = 'rate-badge-poor';
+        icon = '⚠️';
+      }
+
+      return \`
+        <tr class="glass-table-row">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-glass">\${stat.user_name}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-glass">\${stat.total_orders}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-glass">\${formatVND(stat.total_spent)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-glass">\${formatVND(stat.avg_price)}</td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="\${rateClass} px-3 py-1 text-xs rounded-full inline-flex items-center gap-1">
+              <span>\${icon}</span>
+              <span>\${stat.payment_rate}%</span>
+            </span>
+          </td>
+        </tr>
+      \`;
+    }).join('');
+  }
+
+  function formatVND(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount);
+  }
+
+  // Initialize sort indicator
+  document.addEventListener('DOMContentLoaded', () => {
+    const activeHeader = document.querySelector(\`[onclick="sortTable('\${sortColumn}')"]\`);
+    if (activeHeader) {
+      activeHeader.classList.add('sorted-desc');
+    }
+  });
+</script>
+` }) %>

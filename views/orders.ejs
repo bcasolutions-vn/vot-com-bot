@@ -1,0 +1,210 @@
+<%- include('layout', { body: `
+<style>
+  /* Clean Badge Styles */
+  .badge-paid {
+    background: #d1fae5;
+    color: #065f46;
+    font-weight: 600;
+  }
+
+  .badge-unpaid {
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 600;
+  }
+
+  /* Clean Stat Cards */
+  .stat-gradient-purple {
+    border-top: 3px solid #6366f1;
+  }
+
+  .stat-gradient-blue {
+    border-top: 3px solid #3b82f6;
+  }
+
+  .stat-gradient-green {
+    border-top: 3px solid #10b981;
+  }
+
+  .stat-gradient-red {
+    border-top: 3px solid #ef4444;
+  }
+
+  /* Clean Stat Icons */
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    border-radius: 12px;
+    background: #f3f4f6;
+  }
+</style>
+
+<div>
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <div>
+      <h1 class="text-4xl sm:text-5xl font-bold text-glass mb-2">Daily Orders</h1>
+      <p class="text-glass-muted text-base sm:text-lg">Track and manage lunch orders by date</p>
+    </div>
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <button id="prevDay" class="glass-btn px-4 py-2 rounded-xl text-sm sm:text-base font-bold">
+        ← Prev
+      </button>
+      <input type="date" id="datePicker" class="glass-input px-4 py-2 rounded-xl text-sm sm:text-base font-semibold" />
+      <button id="nextDay" class="glass-btn px-4 py-2 rounded-xl text-sm sm:text-base font-bold">
+        Next →
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+    <!-- Total Orders Card -->
+    <div class="glass-card p-6 stat-gradient-purple">
+      <div class="flex items-center justify-between mb-4">
+        <div class="stat-icon">📊</div>
+        <div class="text-right">
+          <div class="text-xs font-bold text-glass-muted uppercase tracking-wider">Total Orders</div>
+          <div class="text-3xl sm:text-4xl font-black text-glass mt-1" id="totalOrders">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Amount Card -->
+    <div class="glass-card p-6 stat-gradient-blue">
+      <div class="flex items-center justify-between mb-4">
+        <div class="stat-icon">💰</div>
+        <div class="text-right">
+          <div class="text-xs font-bold text-glass-muted uppercase tracking-wider">Total Amount</div>
+          <div class="text-2xl sm:text-3xl font-black text-glass mt-1" id="totalAmount">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paid Card -->
+    <div class="glass-card p-6 stat-gradient-green">
+      <div class="flex items-center justify-between mb-4">
+        <div class="stat-icon">✓</div>
+        <div class="text-right">
+          <div class="text-xs font-bold text-glass-muted uppercase tracking-wider">Paid</div>
+          <div class="text-3xl sm:text-4xl font-black text-glass mt-1" id="paidCount">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unpaid Card -->
+    <div class="glass-card p-6 stat-gradient-red">
+      <div class="flex items-center justify-between mb-4">
+        <div class="stat-icon">✗</div>
+        <div class="text-right">
+          <div class="text-xs font-bold text-glass-muted uppercase tracking-wider">Unpaid</div>
+          <div class="text-3xl sm:text-4xl font-black text-glass mt-1" id="unpaidCount">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="glass-strong rounded-2xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="px-6 py-4 text-left text-xs font-bold text-glass-muted uppercase tracking-wider">User</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-glass-muted uppercase tracking-wider">Dish</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-glass-muted uppercase tracking-wider">Price</th>
+            <th class="px-6 py-4 text-left text-xs font-bold text-glass-muted uppercase tracking-wider">Status</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTableBody">
+          <!-- Loaded via JavaScript -->
+        </tbody>
+      </table>
+      <div id="emptyState" class="hidden p-12 text-center">
+        <div class="text-6xl mb-4">🍱</div>
+        <div class="text-glass text-xl font-bold">No orders for this date</div>
+        <div class="text-glass-muted text-sm mt-2">Try selecting a different date</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Set today's date
+  const datePicker = document.getElementById('datePicker');
+  datePicker.valueAsDate = new Date();
+
+  // Load orders on page load
+  loadOrders(datePicker.value);
+
+  // Date picker change
+  datePicker.addEventListener('change', () => {
+    loadOrders(datePicker.value);
+  });
+
+  // Prev/Next day buttons
+  document.getElementById('prevDay').addEventListener('click', () => {
+    const date = new Date(datePicker.value);
+    date.setDate(date.getDate() - 1);
+    datePicker.valueAsDate = date;
+    loadOrders(datePicker.value);
+  });
+
+  document.getElementById('nextDay').addEventListener('click', () => {
+    const date = new Date(datePicker.value);
+    date.setDate(date.getDate() + 1);
+    datePicker.valueAsDate = date;
+    loadOrders(datePicker.value);
+  });
+
+  async function loadOrders(date) {
+    try {
+      const res = await fetch(\`/api/orders?date=\${date}\`);
+      const data = await res.json();
+
+      // Update stats
+      document.getElementById('totalOrders').textContent = data.stats.totalOrders;
+      document.getElementById('totalAmount').textContent = formatVND(data.stats.totalAmount);
+      document.getElementById('paidCount').textContent = data.stats.paidCount;
+      document.getElementById('unpaidCount').textContent = data.stats.unpaidCount;
+
+      // Update table
+      const tbody = document.getElementById('ordersTableBody');
+      const emptyState = document.getElementById('emptyState');
+
+      if (data.orders.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        tbody.innerHTML = data.orders.map(order => \`
+          <tr class="glass-table-row">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-glass">\${order.user_name}</td>
+            <td class="px-6 py-4 text-sm text-glass">\${order.dish_name}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-glass">\${formatVND(order.price)}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              \${order.paid
+                ? '<span class="badge-paid px-3 py-1 text-xs rounded-full inline-flex items-center gap-1"><span>✓</span> Paid</span>'
+                : '<span class="badge-unpaid px-3 py-1 text-xs rounded-full inline-flex items-center gap-1"><span>✗</span> Unpaid</span>'
+              }
+            </td>
+          </tr>
+        \`).join('');
+      }
+    } catch (err) {
+      console.error('Error loading orders:', err);
+    }
+  }
+
+  function formatVND(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount);
+  }
+</script>
+` }) %>

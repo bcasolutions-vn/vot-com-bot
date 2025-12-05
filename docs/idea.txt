@@ -1,0 +1,30 @@
+Current State
+I have a Discord bot to order lunch with a menu about 25 dishes.
+The current bot is running on local host every time i start.
+Every Monday, Wednesday, Friday I'll run discord command to discord user select dish.
+User vote dish, 1 user select one dish by select
+
+Payment Tracking Requirements:
+But i don't have tracking payment, so I want create a web from existing bot to manage
+- Tracking per day, Who ordered, price(default 32.000), other dish with difference price has a note like Ếch rim mắm tỏi ( 42k ), paid/unpaid status
+Ex:
+Mực xào rau củ
+Thịt luộc cà pháo mắm tôm
+Ếch rim mắm tỏi ( 42k )
+Thịt quay xá xíu 
+Mực trứng rim nước mắm ( 37k )
+
+- User cash, track accumulated debt per user across multiple orders
+- I want create a bot command to remind debt, display as User - dept(vietnam dong)
+
+
+
+Web Management Panel Scope
+- every one can access and view, it public
+- 1 page for View all orders by day, 1 page for dis play dept, 1 page to display table: user - total dish- total money
+- No auth needed
+
+Menu Management
+- No needed
+
+No scale
