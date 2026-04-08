@@ -62,10 +62,11 @@ module.exports.execute = async interaction => {
   const totalAmount = todayOrders.reduce((sum, o) => sum + (o.price || 0), 0);
   const uniqueDishes = sorted.length;
 
-  // Extra rice: users who requested it
-  const extraRiceOrders = todayOrders.filter(o => o.extra_rice);
+  // Extra rice: users who requested it (extra_rice === true, not just truthy)
+  const extraRiceOrders = todayOrders.filter(o => o.extra_rice === true);
   const extraRiceCount = extraRiceOrders.length;
   const extraRiceUsers = extraRiceOrders.map(o => o.user_name);
+  console.log('🍚 extra_rice data:', todayOrders.map(o => ({ user: o.user_name, extra_rice: o.extra_rice })));
 
   // Create description in requested format: <count> <dish> — <users>
   const description = sorted

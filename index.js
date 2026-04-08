@@ -158,10 +158,27 @@ client.on(Events.InteractionCreate, async interaction => {
         // Toggle extra rice state for this user
         extraRiceState[userId] = !extraRiceState[userId];
         const isOn = extraRiceState[userId];
+
+        // If user already has an order today, update extra_rice immediately
+        const { data: existing } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('date', today)
+          .eq('user_id', userId)
+          .single();
+
+        if (existing) {
+          await supabase
+            .from('orders')
+            .update({ extra_rice: isOn })
+            .eq('date', today)
+            .eq('user_id', userId);
+        }
+
         await i.reply({
           content: isOn
-            ? '🍚 Đã bật **Cơm thêm** — giờ chọn món để xác nhận!'
-            : '🍚 Đã tắt **Cơm thêm** — giờ chọn món để xác nhận!',
+            ? '🍚 Đã bật **Cơm thêm** (free)!'
+            : '🍚 Đã tắt **Cơm thêm**.',
           flags: ['Ephemeral']
         });
       }
