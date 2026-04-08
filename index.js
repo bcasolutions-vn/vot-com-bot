@@ -106,10 +106,10 @@ client.on(Events.InteractionCreate, async interaction => {
       .setFooter({ text: 'Chọn món • Bấm "Cơm thêm" nếu muốn thêm cơm (free) • /ket-qua để xem kết quả' })
       .setTimestamp();
 
-    const msg = await interaction.reply({
+    const { resource: { message: msg } } = await interaction.reply({
       embeds: [embed],
       components: [selectRow, btnRow],
-      fetchReply: true
+      withResponse: true
     });
 
     // Track per-user extra rice state: { userId: boolean }
@@ -145,12 +145,12 @@ client.on(Events.InteractionCreate, async interaction => {
 
         if (insertError) {
           console.error('❌ Error inserting order:', insertError);
-          await i.followUp({ content: '❌ Lỗi khi lưu đơn hàng!', ephemeral: true });
+          await i.followUp({ content: '❌ Lỗi khi lưu đơn hàng!', flags: ['Ephemeral'] });
         } else {
           const extraText = wantsExtraRice ? '\n🍚 **Cơm thêm:** Có (free)' : '';
           await i.followUp({
             content: `✅ Đã đặt: **${selectedDish}**\n💰 Giá: ${price.toLocaleString('vi-VN')} VND${extraText}`,
-            ephemeral: true
+            flags: ['Ephemeral']
           });
         }
 
@@ -158,12 +158,11 @@ client.on(Events.InteractionCreate, async interaction => {
         // Toggle extra rice state for this user
         extraRiceState[userId] = !extraRiceState[userId];
         const isOn = extraRiceState[userId];
-        // Acknowledge button then notify user privately
         await i.reply({
           content: isOn
             ? '🍚 Đã bật **Cơm thêm** — giờ chọn món để xác nhận!'
             : '🍚 Đã tắt **Cơm thêm** — giờ chọn món để xác nhận!',
-          ephemeral: true
+          flags: ['Ephemeral']
         });
       }
     });

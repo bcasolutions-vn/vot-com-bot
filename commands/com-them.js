@@ -70,11 +70,11 @@ module.exports.execute = async interaction => {
     .setFooter({ text: 'Chọn món từ menu bên dưới' })
     .setTimestamp();
 
-  const msg = await interaction.reply({
+  const { resource: { message: msg } } = await interaction.reply({
     embeds: [embed],
     components: [row],
-    fetchReply: true,
-    ephemeral: true
+    withResponse: true,
+    flags: ['Ephemeral']
   });
 
   // Step 1: collect dish selection
