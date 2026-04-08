@@ -90,104 +90,78 @@ client.on(Events.InteractionCreate, async interaction => {
         }))
       );
 
-    const row = new ActionRowBuilder().addComponents(menu);
+    // Extra rice toggle button shown below the select menu (shared on public message)
+    const extraRiceBtn = new ButtonBuilder()
+      .setCustomId('vote_extra_rice')
+      .setLabel('🍚 Cơm thêm (free)')
+      .setStyle(ButtonStyle.Secondary);
+
+    const selectRow = new ActionRowBuilder().addComponents(menu);
+    const btnRow = new ActionRowBuilder().addComponents(extraRiceBtn);
+
     const embed = new EmbedBuilder()
       .setTitle('🍚 Menu đặt cơm hôm nay')
       .setColor(0x10b981)
       .setDescription(items.map((m, i) => `**${i + 1}.** ${m}`).join('\n'))
-      .setFooter({ text: 'Chọn món bạn muốn ăn. Dùng /ket-qua để xem kết quả.' })
+      .setFooter({ text: 'Chọn món • Bấm "Cơm thêm" nếu muốn thêm cơm (free) • /ket-qua để xem kết quả' })
       .setTimestamp();
 
     const msg = await interaction.reply({
       embeds: [embed],
-      components: [row],
+      components: [selectRow, btnRow],
       fetchReply: true
     });
 
-    const collector = msg.createMessageComponentCollector({
-      componentType: ComponentType.StringSelect
-    });
+    // Track per-user extra rice state: { userId: boolean }
+    const extraRiceState = {};
+
+    const collector = msg.createMessageComponentCollector();
 
     collector.on('collect', async i => {
-      const selectedDish = items[+i.values[0]];
       const userId = i.user.id;
       const userName = i.member?.displayName || i.user.username;
-      const price = extractPrice(selectedDish);
 
-      // Show extra rice checkbox after dish selection
-      const extraRiceBtn = new ButtonBuilder()
-        .setCustomId(`extra_rice_${userId}`)
-        .setLabel('🍚 Cơm thêm (free) — Chưa chọn')
-        .setStyle(ButtonStyle.Secondary);
+      if (i.customId === 'vote_select') {
+        const selectedDish = items[+i.values[0]];
+        const price = extractPrice(selectedDish);
+        const wantsExtraRice = extraRiceState[userId] || false;
 
-      const confirmBtn = new ButtonBuilder()
-        .setCustomId(`confirm_${userId}`)
-        .setLabel('✅ Xác nhận')
-        .setStyle(ButtonStyle.Success);
+        // Delete existing orders for this user today
+        await supabase.from('orders').delete().eq('date', today).eq('user_id', userId);
 
-      const btnRow = new ActionRowBuilder().addComponents(extraRiceBtn, confirmBtn);
-
-      await i.reply({
-        content: `**Món đã chọn:** ${selectedDish}\n**Giá:** ${price.toLocaleString('vi-VN')} VND\n\n👇 Muốn cơm thêm không? (free)`,
-        components: [btnRow],
-        ephemeral: true,
-        fetchReply: true
-      }).then(async reply => {
-        let wantsExtraRice = false;
-
-        const btnCollector = reply.createMessageComponentCollector({
-          componentType: ComponentType.Button,
-          time: 60_000,
-          filter: b => b.user.id === userId
+        // Insert order — extra_rice follows whatever user toggled
+        const { error: insertError } = await supabase.from('orders').insert({
+          date: today,
+          user_id: userId,
+          user_name: userName,
+          dish_name: selectedDish,
+          price: price,
+          paid: false,
+          extra_rice: wantsExtraRice
         });
 
-        btnCollector.on('collect', async b => {
-          if (b.customId === `extra_rice_${userId}`) {
-            wantsExtraRice = !wantsExtraRice;
-            const updatedExtraBtn = new ButtonBuilder()
-              .setCustomId(`extra_rice_${userId}`)
-              .setLabel(wantsExtraRice ? '🍚 Cơm thêm (free) — ✅ Đã chọn' : '🍚 Cơm thêm (free) — Chưa chọn')
-              .setStyle(wantsExtraRice ? ButtonStyle.Primary : ButtonStyle.Secondary);
+        if (insertError) {
+          console.error('❌ Error inserting order:', insertError);
+          await i.reply({ content: '❌ Lỗi khi lưu đơn hàng!', ephemeral: true });
+        } else {
+          const extraText = wantsExtraRice ? '\n🍚 **Cơm thêm:** Có (free)' : '';
+          await i.reply({
+            content: `✅ Đã đặt: **${selectedDish}**\n💰 Giá: ${price.toLocaleString('vi-VN')} VND${extraText}`,
+            ephemeral: true
+          });
+        }
 
-            await b.update({
-              components: [new ActionRowBuilder().addComponents(updatedExtraBtn, confirmBtn)]
-            });
-          } else if (b.customId === `confirm_${userId}`) {
-            // Delete existing orders for this user today
-            await supabase.from('orders').delete().eq('date', today).eq('user_id', userId);
-
-            // Insert new order with extra_rice flag
-            const { error: insertError } = await supabase.from('orders').insert({
-              date: today,
-              user_id: userId,
-              user_name: userName,
-              dish_name: selectedDish,
-              price: price,
-              paid: false,
-              extra_rice: wantsExtraRice
-            });
-
-            if (insertError) {
-              console.error('❌ Error inserting order:', insertError);
-              await b.update({ content: '❌ Lỗi khi lưu đơn hàng!', components: [] });
-            } else {
-              const extraText = wantsExtraRice ? '\n🍚 **Cơm thêm:** Có (free)' : '';
-              await b.update({
-                content: `✅ Đã đặt: **${selectedDish}**\n💰 Giá: ${price.toLocaleString('vi-VN')} VND${extraText}`,
-                components: []
-              });
-            }
-
-            btnCollector.stop();
-          }
+      } else if (i.customId === 'vote_extra_rice') {
+        // Toggle extra rice state for this user
+        extraRiceState[userId] = !extraRiceState[userId];
+        const isOn = extraRiceState[userId];
+        await i.reply({
+          content: isOn
+            ? '🍚 Đã bật **Cơm thêm** — chọn món để xác nhận!'
+            : '🍚 Đã tắt **Cơm thêm** — chọn món để xác nhận!',
+          ephemeral: true
         });
-
-        btnCollector.on('end', async (collected, reason) => {
-          if (reason !== 'user' && collected.size === 0) {
-            await i.editReply({ content: '⏱️ Hết thời gian xác nhận!', components: [] });
-          }
-        });
-      });
+      }
     });
   }
 });
