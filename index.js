@@ -126,6 +126,9 @@ client.on(Events.InteractionCreate, async interaction => {
         const price = extractPrice(selectedDish);
         const wantsExtraRice = extraRiceState[userId] || false;
 
+        // Acknowledge the select interaction first to avoid "interaction failed"
+        await i.deferUpdate();
+
         // Delete existing orders for this user today
         await supabase.from('orders').delete().eq('date', today).eq('user_id', userId);
 
@@ -142,10 +145,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
         if (insertError) {
           console.error('❌ Error inserting order:', insertError);
-          await i.reply({ content: '❌ Lỗi khi lưu đơn hàng!', ephemeral: true });
+          await i.followUp({ content: '❌ Lỗi khi lưu đơn hàng!', ephemeral: true });
         } else {
           const extraText = wantsExtraRice ? '\n🍚 **Cơm thêm:** Có (free)' : '';
-          await i.reply({
+          await i.followUp({
             content: `✅ Đã đặt: **${selectedDish}**\n💰 Giá: ${price.toLocaleString('vi-VN')} VND${extraText}`,
             ephemeral: true
           });
@@ -155,10 +158,11 @@ client.on(Events.InteractionCreate, async interaction => {
         // Toggle extra rice state for this user
         extraRiceState[userId] = !extraRiceState[userId];
         const isOn = extraRiceState[userId];
+        // Acknowledge button then notify user privately
         await i.reply({
           content: isOn
-            ? '🍚 Đã bật **Cơm thêm** — chọn món để xác nhận!'
-            : '🍚 Đã tắt **Cơm thêm** — chọn món để xác nhận!',
+            ? '🍚 Đã bật **Cơm thêm** — giờ chọn món để xác nhận!'
+            : '🍚 Đã tắt **Cơm thêm** — giờ chọn món để xác nhận!',
           ephemeral: true
         });
       }
