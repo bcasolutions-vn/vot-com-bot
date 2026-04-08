@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
@@ -114,37 +114,80 @@ client.on(Events.InteractionCreate, async interaction => {
       const userName = i.member?.displayName || i.user.username;
       const price = extractPrice(selectedDish);
 
-      // Delete existing orders for this user today
-      await supabase
-        .from('orders')
-        .delete()
-        .eq('date', today)
-        .eq('user_id', userId);
+      // Show extra rice checkbox after dish selection
+      const extraRiceBtn = new ButtonBuilder()
+        .setCustomId(`extra_rice_${userId}`)
+        .setLabel('🍚 Cơm thêm (free) — Chưa chọn')
+        .setStyle(ButtonStyle.Secondary);
 
-      // Insert new order
-      const { error: insertError } = await supabase
-        .from('orders')
-        .insert({
-          date: today,
-          user_id: userId,
-          user_name: userName,
-          dish_name: selectedDish,
-          price: price,
-          paid: false
+      const confirmBtn = new ButtonBuilder()
+        .setCustomId(`confirm_${userId}`)
+        .setLabel('✅ Xác nhận')
+        .setStyle(ButtonStyle.Success);
+
+      const btnRow = new ActionRowBuilder().addComponents(extraRiceBtn, confirmBtn);
+
+      await i.reply({
+        content: `**Món đã chọn:** ${selectedDish}\n**Giá:** ${price.toLocaleString('vi-VN')} VND\n\n👇 Muốn cơm thêm không? (free)`,
+        components: [btnRow],
+        ephemeral: true,
+        fetchReply: true
+      }).then(async reply => {
+        let wantsExtraRice = false;
+
+        const btnCollector = reply.createMessageComponentCollector({
+          componentType: ComponentType.Button,
+          time: 60_000,
+          filter: b => b.user.id === userId
         });
 
-      if (insertError) {
-        console.error('❌ Error inserting order:', insertError);
-        await i.reply({
-          content: '❌ Lỗi khi lưu đơn hàng!',
-          ephemeral: true
+        btnCollector.on('collect', async b => {
+          if (b.customId === `extra_rice_${userId}`) {
+            wantsExtraRice = !wantsExtraRice;
+            const updatedExtraBtn = new ButtonBuilder()
+              .setCustomId(`extra_rice_${userId}`)
+              .setLabel(wantsExtraRice ? '🍚 Cơm thêm (free) — ✅ Đã chọn' : '🍚 Cơm thêm (free) — Chưa chọn')
+              .setStyle(wantsExtraRice ? ButtonStyle.Primary : ButtonStyle.Secondary);
+
+            await b.update({
+              components: [new ActionRowBuilder().addComponents(updatedExtraBtn, confirmBtn)]
+            });
+          } else if (b.customId === `confirm_${userId}`) {
+            // Delete existing orders for this user today
+            await supabase.from('orders').delete().eq('date', today).eq('user_id', userId);
+
+            // Insert new order with extra_rice flag
+            const { error: insertError } = await supabase.from('orders').insert({
+              date: today,
+              user_id: userId,
+              user_name: userName,
+              dish_name: selectedDish,
+              price: price,
+              paid: false,
+              extra_rice: wantsExtraRice
+            });
+
+            if (insertError) {
+              console.error('❌ Error inserting order:', insertError);
+              await b.update({ content: '❌ Lỗi khi lưu đơn hàng!', components: [] });
+            } else {
+              const extraText = wantsExtraRice ? '\n🍚 **Cơm thêm:** Có (free)' : '';
+              await b.update({
+                content: `✅ Đã đặt: **${selectedDish}**\n💰 Giá: ${price.toLocaleString('vi-VN')} VND${extraText}`,
+                components: []
+              });
+            }
+
+            btnCollector.stop();
+          }
         });
-      } else {
-        await i.reply({
-          content: `✅ Đã đặt: **${selectedDish}**\n💰 Giá: ${price.toLocaleString('vi-VN')} VND`,
-          ephemeral: true
+
+        btnCollector.on('end', async (collected, reason) => {
+          if (reason !== 'user' && collected.size === 0) {
+            await i.editReply({ content: '⏱️ Hết thời gian xác nhận!', components: [] });
+          }
         });
-      }
+      });
     });
   }
 });

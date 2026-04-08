@@ -18,6 +18,7 @@ module.exports.execute = async interaction => {
     .eq('date', today)
     .order('dish_name', { ascending: true });
 
+
   if (error) {
     return interaction.reply({
       content: '❌ Lỗi khi lấy dữ liệu!',
@@ -61,6 +62,11 @@ module.exports.execute = async interaction => {
   const totalAmount = todayOrders.reduce((sum, o) => sum + (o.price || 0), 0);
   const uniqueDishes = sorted.length;
 
+  // Extra rice: users who requested it
+  const extraRiceOrders = todayOrders.filter(o => o.extra_rice);
+  const extraRiceCount = extraRiceOrders.length;
+  const extraRiceUsers = extraRiceOrders.map(o => o.user_name);
+
   // Create description in requested format: <count> <dish> — <users>
   const description = sorted
     .map(item => {
@@ -69,19 +75,29 @@ module.exports.execute = async interaction => {
     })
     .join('\n');
 
+  const fields = [
+    {
+      name: '📊 Tổng quan',
+      value: `**Tổng đơn:** ${totalOrders}\n` +
+             `**Số món:** ${uniqueDishes}\n` +
+             `**Tổng tiền:** ${totalAmount.toLocaleString('vi-VN')} VND`,
+      inline: false
+    }
+  ];
+
+  if (extraRiceCount > 0) {
+    fields.push({
+      name: `🍚 Cơm thêm (free) — ${extraRiceCount} phần`,
+      value: extraRiceUsers.join(', '),
+      inline: false
+    });
+  }
+
   const embed = new EmbedBuilder()
     .setTitle('🍽️ Kết quả đặt cơm hôm nay')
     .setColor(0xFFA500)
     .setDescription(description || 'Không có đơn hàng nào')
-    .addFields(
-      {
-        name: '📊 Tổng quan',
-        value: `**Tổng đơn:** ${totalOrders}\n` +
-               `**Số món:** ${uniqueDishes}\n` +
-               `**Tổng tiền:** ${totalAmount.toLocaleString('vi-VN')} VND`,
-        inline: false
-      }
-    )
+    .addFields(...fields)
     .setFooter({
       text: `Ngày ${new Date().toLocaleDateString('vi-VN')}`
     })

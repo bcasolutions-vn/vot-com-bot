@@ -21,8 +21,12 @@ CREATE TABLE IF NOT EXISTS orders (
   dish_name TEXT NOT NULL,
   price INTEGER NOT NULL,
   paid BOOLEAN DEFAULT FALSE,
+  extra_rice BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration: add extra_rice column if upgrading from existing schema
+-- ALTER TABLE orders ADD COLUMN IF NOT EXISTS extra_rice BOOLEAN DEFAULT FALSE;
 
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_menus_date ON menus(date);
