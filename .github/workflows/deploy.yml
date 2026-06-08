@@ -1,0 +1,73 @@
+name: vote-com-bot
+
+on:
+  push:
+    branches: ['main', 'master']
+  workflow_dispatch:
+
+env:
+  ORGANIZATION: droppii
+  SERVICE_NAME: vote-com-bot
+  REGISTRY: droppii.azurecr.io
+  ACTIONS_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+jobs:
+  CI:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate metadata
+        id: metadata
+        run: |
+          time=$(date +"%Y%m%d%H%M")
+          echo "image-name=${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.SERVICE_NAME }}" >> $GITHUB_OUTPUT
+          echo "image-tag-sha=${GITHUB_SHA::12}" >> $GITHUB_OUTPUT
+          echo "image-tag-deploy=${GITHUB_SHA::12}-deploy-${GITHUB_REF_NAME}-${time}" >> $GITHUB_OUTPUT
+          echo "author=${GITHUB_ACTOR}" >> $GITHUB_OUTPUT
+          echo "trigger-type=${GITHUB_REF_TYPE}" >> $GITHUB_OUTPUT
+          echo "service-env=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Notify in-progress to Discord
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: ${{ secrets.DISCORD_WEBHOOK }}
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json"}'
+          data: >-
+            {"embeds": [{"title":"[BOT-${{ steps.metadata.outputs.service-env }}]
+            ${{ env.SERVICE_NAME }} build starting...", "url": "${{ env.ACTIONS_RUN_URL }}",
+            "color": 340723, "fields": [
+              {"name":"Author","value":"${{ steps.metadata.outputs.author }}","inline":true},
+              {"name":"Trigger Type","value":"${{ steps.metadata.outputs.trigger-type }}","inline":true},
+              {"name":"Image Tag","value":"${{ steps.metadata.outputs.image-tag-deploy }}"}
+            ]}]}
+
+      - name: Generate .env
+        run: |
+          echo "TOKEN=${{ secrets.TOKEN }}" >> .env
+          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> .env
+          echo "PORT=3000" >> .env
+
+      - name: Login to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.REGISTRY }}
+          username: ${{ secrets.AZURE_CLIENT_ID }}
+          password: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3.2.0
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.metadata.outputs.image-name }}:${{ steps.metadata.outputs.image-tag-sha }}
+            ${{ steps.metadata.outputs.image-name }}:${{ steps.metadata.outputs.image-tag-deploy }}
+            ${{ steps.metadata.outputs.image-name }}:latest

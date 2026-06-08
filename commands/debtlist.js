@@ -7,7 +7,7 @@ module.exports.data = new SlashCommandBuilder()
   .setDescription('Xem danh sách công nợ của mọi người');
 
 module.exports.execute = async interaction => {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   // Query: Users with unpaid orders
   const { data: debtData, error: debtError } = await supabase

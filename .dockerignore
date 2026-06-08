@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+.env
+.env.*
+logs
+*.log
+.git
+.gitignore
+docs
+plans
+README.md
+QUICK-START.md
+*.md
