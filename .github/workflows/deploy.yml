@@ -2,7 +2,7 @@ name: vote-com-bot
 
 on:
   push:
-    branches: ['main', 'master']
+    branches: ['stg']
   workflow_dispatch:
 
 env:
