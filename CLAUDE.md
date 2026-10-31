@@ -37,3 +37,7 @@ We keep all important docs in `./docs` folder and keep updating them, structure 
 ```
 
 **IMPORTANT:** *MUST READ* and *MUST COMPLY* all *INSTRUCTIONS* in project `./CLAUDE.md`, especially *WORKFLOWS* section is *CRITICALLY IMPORTANT*, this rule is *MANDATORY. NON-NEGOTIABLE. NO EXCEPTIONS. MUST REMEMBER AT ALL TIMES!!!*
+
+## Ngữ cảnh repository dùng chung
+
+Đọc thêm [AGENTS.md](AGENTS.md) và [docs/repository-context.md](docs/repository-context.md) để tra phạm vi sản phẩm, nguồn Engineering Knowledge, module, lệnh kiểm chứng, dữ liệu và điều kiện triển khai. Giữ các workflow và quy tắc cụ thể ở trên; đối chiếu hướng dẫn setup/deploy với mã nguồn được liên kết trong tài liệu ngữ cảnh.
