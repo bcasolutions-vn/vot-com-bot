@@ -1,0 +1,59 @@
+{
+  "kind": "repository-execution-profiles",
+  "schemaVersion": 1,
+  "repository": "bcasolutions-vn/vot-com-bot",
+  "workspace": "checkout/worktree/VM do nền tảng agent quản lý theo công việc",
+  "context": "docs/repository-context.md",
+  "modules": [
+    {
+      "id": "root",
+      "path": ".",
+      "manifest": "package.json",
+      "runtime": {
+        "engines": {},
+        "packageManager": "Xác nhận từ pipeline/ngữ cảnh repo trước khi cài",
+        "sources": [
+          "package.json"
+        ]
+      },
+      "dependency": {
+        "lockfile": null,
+        "cwd": ".",
+        "argv": [],
+        "lifecycle": "Script cài đặt tắt; đọc postinstall/prepare và chỉ chạy bước sinh mã/patch cần thiết sau khi kiểm tra tác động.",
+        "limitations": [
+          "Chưa có lockfile phù hợp trong Git; chưa cung cấp lệnh cài tái tạo. Chốt và kiểm chứng lockfile trước khi bổ sung setup tự động."
+        ]
+      }
+    }
+  ],
+  "imageSources": [],
+  "profiles": [
+    {
+      "id": "root-manifest",
+      "kind": "source-check",
+      "purpose": "Kiểm tra manifest và đầu vào dependency của .",
+      "cwd": ".",
+      "requiredFiles": [
+        "package.json"
+      ],
+      "patterns": [
+        "package.json"
+      ],
+      "exclude": [
+        ".claude/*",
+        ".opencode/*",
+        ".agents/*",
+        ".engineering/*",
+        "*node_modules/*",
+        "*__pycache__/*"
+      ],
+      "evidenceKind": "source-validation",
+      "limitations": [
+        "Kiểm tra cấu trúc/cú pháp đầu vào và ghi hash; chưa chạy ứng dụng hoặc kiểm chứng nghiệp vụ.",
+        "Python được phân tích AST; JSON nghiêm ngặt và XML được parse; các file khác chỉ được nhận diện bằng hash."
+      ]
+    }
+  ],
+  "integrationPolicy": "API/database/broker/model/native/cloud cần profile hoặc môi trường thử riêng với đích, quyền, dữ liệu và kiểm chứng cụ thể; không chạy toàn bộ suite hoặc script start/migration/deploy để thử profile."
+}
