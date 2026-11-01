@@ -106,3 +106,7 @@ Phát hành bot, đăng ký commands và migration là ba thao tác riêng với
 Cập nhật ngữ cảnh khi đổi đường dẫn, tên command, biến môi trường, schema/policy, hợp đồng API, toolchain hoặc cách phát hành. Duy trì hướng dẫn chi tiết tại README/docs và quy tắc riêng tại CLAUDE; kiến thức dùng chung ở Engineering Knowledge.
 
 Trước bàn giao, kiểm diff, file mới, liên kết trong Git và phạm vi ảnh hưởng. Hồ sơ công việc ghi revision, nguồn đã đọc, kiểm chứng thực tế, phần chưa kiểm chứng và điều còn thiếu. Thay đổi chỉ tài liệu dùng kiểm diff/liên kết; không cần cài dependencies, chạy placeholder test, đăng nhập Discord, gọi Supabase, chạy PM2 hoặc gửi notifications.
+
+## Profile và workspace theo công việc
+
+[Profile thực thi của repository](../.engineering/README.md) cung cấp cấu hình theo module và điểm vào kiểm chứng local. Chọn profile trong workspace của công việc, chuẩn bị đúng toolchain/dependency, rồi ghi kết quả và giới hạn vào hồ sơ. Kiểm cấu hình hoặc cú pháp thành công chưa thay thế unit/integration test.

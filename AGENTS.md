@@ -26,3 +26,7 @@ Nguồn chung: [Engineering Knowledge](https://github.com/droppii/engineering-kn
 ## Hoàn tất và duy trì
 
 Kiểm diff, liên kết và phạm vi ảnh hưởng trước bàn giao. Cập nhật ngữ cảnh cùng thay đổi lệnh, schema, hợp đồng API hoặc triển khai; giữ tiêu chuẩn chung tại Engineering Knowledge. Không suy ra cấu hình triển khai thực tế chỉ từ hướng dẫn hosting hoặc việc không có workflow trong Git.
+
+## Profile thực thi
+
+Đọc [.engineering/README.md](.engineering/README.md) để chọn profile theo module và nhu cầu kiểm chứng. Dùng checkout/worktree do công cụ agent quản lý theo công việc; phân biệt kiểm nguồn, kiểm mã và kiểm thử hành vi.
